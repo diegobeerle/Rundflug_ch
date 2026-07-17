@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="description" content="Individuelle Strecken- und Reiseflüge ab Triengen mit einer Cessna 172RG. Rundflüge sind ebenfalls möglich.">
+  <meta name="theme-color" content="#05070b">
+  <meta property="og:title" content="RUNDFLUG_CH – Fliegen neu erleben">
+  <meta property="og:description" content="Individuelle Streckenflüge und Tagesreisen ab Triengen. Rundflüge sind ebenfalls möglich.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/images/hero.webp">
+  <title>RUNDFLUG_CH – Private Flugerlebnisse ab Triengen</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://tile.openstreetmap.org">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <style>
+    :root{
+      --bg:#05070b;--bg2:#0a0f17;--card:#101722;--line:rgba(255,255,255,.12);
+      --text:#f7f9fc;--muted:#aab6c7;--accent:#62c5ff;--accent2:#8ce0ff;--gold:#ffd98a;
+      --max:1240px;--radius:28px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth;background:var(--bg)}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.55}
+    body.lock{overflow:hidden}
+    img{display:block;max-width:100%}
+    a{color:inherit;text-decoration:none}
+    button,input,select{font:inherit}
+    .wrap{width:min(var(--max),calc(100% - 36px));margin:auto}
+    .eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent2);font-weight:800}
+    nav{position:fixed;inset:0 0 auto;z-index:100;background:linear-gradient(to bottom,rgba(5,7,11,.9),rgba(5,7,11,.38),transparent);backdrop-filter:blur(8px)}
+    .navin{height:78px;display:flex;align-items:center;justify-content:space-between}
+    .brand{font-weight:950;letter-spacing:-.04em;font-size:21px}
+    .brand span{color:var(--accent)}
+    .navlinks{display:flex;align-items:center;gap:25px;font-size:14px;color:#d9e4ef}
+    .navlinks a:hover{color:#fff}
+    .lang{border:1px solid var(--line);background:rgba(255,255,255,.08);color:#fff;padding:9px 12px;border-radius:999px;cursor:pointer}
+    .cta{background:#fff;color:#07111f;padding:12px 18px;border-radius:999px;font-weight:850}
+    .hero{min-height:100svh;position:relative;display:grid;align-items:end;overflow:hidden}
+    .hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 42%;filter:saturate(.95) contrast(1.03)}
+    .hero:after{content:"";position:absolute;inset:0;background:
+      linear-gradient(to top,rgba(5,7,11,.95) 0%,rgba(5,7,11,.48) 45%,rgba(5,7,11,.2) 72%,rgba(5,7,11,.46) 100%)}
+    .heroContent{position:relative;z-index:2;padding:160px 0 72px}
+    h1{font-size:clamp(56px,8.4vw,126px);line-height:.87;letter-spacing:-.075em;max-width:1050px;margin:18px 0 24px}
+    .heroLead{font-size:clamp(18px,2vw,24px);max-width:680px;color:#e5edf6}
+    .heroActions{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:14px 21px;border-radius:999px;font-weight:850;transition:.2s}
+    .btn:hover{transform:translateY(-2px)}
+    .btn.primary{background:#fff;color:#07111f}
+    .btn.ghost{border:1px solid rgba(255,255,255,.42);background:rgba(0,0,0,.16)}
+    .heroMeta{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:64px;border:1px solid var(--line);border-radius:24px;overflow:hidden;max-width:720px}
+    .heroMeta div{padding:17px 20px;background:rgba(7,11,17,.58);backdrop-filter:blur(14px)}
+    .heroMeta strong{display:block;font-size:20px}.heroMeta span{font-size:12px;color:var(--muted)}
+    section{padding:110px 0}
+    .sectionHead{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:end;margin-bottom:44px}
+    .sectionHead h2{font-size:clamp(42px,6vw,78px);line-height:.95;letter-spacing:-.055em;margin:8px 0 0}
+    .sectionHead p{color:var(--muted);font-size:18px;max-width:560px;margin:0}
+    .aboutGrid{display:grid;grid-template-columns:.95fr 1.05fr;gap:18px}
+    .portrait,.aboutText{border-radius:var(--radius);overflow:hidden;background:var(--card);border:1px solid var(--line)}
+    .portrait img{width:100%;height:100%;min-height:620px;object-fit:cover;object-position:center}
+    .aboutText{padding:44px;display:flex;flex-direction:column;justify-content:space-between}
+    .aboutText h3{font-size:42px;line-height:1;letter-spacing:-.045em;margin:0 0 20px}
+    .aboutText p{color:var(--muted);font-size:17px}
+    .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:35px}
+    .fact{padding:18px;border-radius:18px;background:#0a111a;border:1px solid var(--line)}
+    .fact b{font-size:22px;display:block}.fact span{font-size:12px;color:var(--muted)}
+    .offers{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+    .offer{min-height:330px;padding:26px;border-radius:26px;background:linear-gradient(145deg,#101a27,#0a1018);border:1px solid var(--line);position:relative;overflow:hidden}
+    .offer:after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;right:-70px;top:-70px;background:radial-gradient(circle,rgba(98,197,255,.35),transparent 68%)}
+    .offer .n{font-size:12px;color:var(--accent);font-weight:900}.offer h3{font-size:29px;line-height:1.05;margin:72px 0 15px}.offer p{color:var(--muted)}.offer strong{position:absolute;bottom:24px}
+    .feature{position:relative;min-height:82svh;display:grid;align-items:end;overflow:hidden}
+    .feature img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+    .feature:after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(5,7,11,.93),rgba(5,7,11,.08) 70%)}
+    .featureContent{position:relative;z-index:2;padding:70px 0}
+    .featureContent h2{font-size:clamp(46px,7vw,92px);line-height:.92;letter-spacing:-.06em;margin:10px 0 18px;max-width:860px}
+    .featureContent p{max-width:600px;color:#dfe8f1;font-size:18px}
+    .gallery{columns:3 290px;column-gap:14px}
+    .gallery button{display:block;width:100%;border:0;padding:0;margin:0 0 14px;background:none;border-radius:20px;overflow:hidden;cursor:zoom-in;break-inside:avoid}
+    .gallery img{width:100%;transition:.35s}
+    .gallery button:hover img{transform:scale(1.025);filter:brightness(1.06)}
+    .priceGrid{display:grid;grid-template-columns:.9fr 1.1fr;gap:18px}
+    .priceCard,.calc{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:34px}
+    .price{font-size:64px;line-height:1;letter-spacing:-.06em;font-weight:950}
+    .price small{font-size:15px;letter-spacing:0;color:var(--muted)}
+    .rows{margin-top:28px}.row{display:flex;justify-content:space-between;gap:20px;padding:14px 0;border-top:1px solid var(--line)}
+    label{display:block;font-size:13px;font-weight:850;margin:15px 0 7px}
+    input,select{width:100%;padding:14px;border-radius:14px;border:1px solid var(--line);background:#080d14;color:#fff}
+    .result{margin-top:18px;background:#fff;color:#07111f;border-radius:20px;padding:22px}
+    .result strong{font-size:40px;display:block;letter-spacing:-.04em}
+    .small{font-size:12px;color:var(--muted)}
+    .contact{background:linear-gradient(140deg,#0e1a28,#113c61);border:1px solid var(--line);border-radius:34px;padding:56px;display:grid;grid-template-columns:.9fr 1.1fr;gap:42px}
+    .contact h2{font-size:clamp(46px,6vw,78px);line-height:.94;letter-spacing:-.055em;margin:0}
+    .contactBox{background:#fff;color:#07111f;border-radius:24px;padding:28px}
+    .contactBtns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+    .contactBtns a{padding:16px;text-align:center;border-radius:16px;font-weight:900}
+    .mail{background:#1264ff;color:#fff}.insta{background:#07111f;color:#fff}
+    footer{padding:45px 0;color:var(--muted);font-size:13px}.foot{display:flex;justify-content:space-between;gap:30px}
+    .lightbox{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.94);display:none;align-items:center;justify-content:center;padding:30px}
+    .lightbox.open{display:flex}
+    .lightbox img{max-height:90vh;max-width:92vw;border-radius:16px}
+    .close{position:fixed;right:22px;top:22px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.45);color:#fff;font-size:25px;cursor:pointer}
+    .mobileMenu{display:none}
+    [data-en]{display:none}
+    body.en [data-de]{display:none}
+    body.en [data-en]{display:initial}
+
+    .slideshow{position:relative;border-radius:30px;overflow:hidden;background:#0a0f17;border:1px solid var(--line)}
+    .slides{position:relative;aspect-ratio:16/9;min-height:360px}
+    .slide{position:absolute;inset:0;opacity:0;transition:opacity .7s ease;pointer-events:none;margin:0}
+    .slide.active{opacity:1;pointer-events:auto}
+    .slide img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}
+    .slideShade{position:absolute;inset:auto 0 0;padding:70px 28px 24px;background:linear-gradient(to top,rgba(5,7,11,.92),transparent);display:flex;justify-content:space-between;align-items:end;gap:20px}
+    .slideShade strong{font-size:21px}.slideCount{font-size:13px;color:#d6e5f3}
+    .slideNav{position:absolute;inset:50% 18px auto;transform:translateY(-50%);display:flex;justify-content:space-between;z-index:3;pointer-events:none}
+    .slideNav button{pointer-events:auto;width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(5,7,11,.58);color:#fff;font-size:27px;cursor:pointer}
+    .slideDots{display:flex;gap:7px;justify-content:center;padding:16px;flex-wrap:wrap}
+    .slideDots button{width:8px;height:8px;border-radius:50%;border:0;padding:0;background:#566171;cursor:pointer}
+    .slideDots button.active{background:#fff;transform:scale(1.35)}
+    .thumbs{display:flex;gap:9px;overflow-x:auto;padding:0 16px 17px}
+    .thumbs button{flex:0 0 95px;height:62px;padding:0;border:1px solid transparent;border-radius:10px;overflow:hidden;background:none;cursor:pointer;opacity:.55}
+    .thumbs button.active{border-color:#fff;opacity:1}
+    .thumbs img{width:100%;height:100%;object-fit:cover}
+    .mapLayout{display:grid;grid-template-columns:1.25fr .75fr;gap:18px}
+    #europeMap{height:620px;border-radius:28px;border:1px solid var(--line);overflow:hidden;background:#101722}
+    .mapPanel{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:30px;display:flex;flex-direction:column;justify-content:space-between}
+    .mapPanel h3{font-size:34px;line-height:1.05;margin:8px 0 15px}
+    .mapPanel p{color:var(--muted)}
+    .mapDetails{padding:20px;border-radius:20px;background:#080d14;border:1px solid var(--line);margin-top:24px}
+    .mapDetails strong{font-size:24px;display:block}.mapDetails span{color:var(--muted);font-size:14px}
+    .routeLine{display:flex;align-items:center;gap:10px;margin-top:14px;font-weight:850}
+    .routeLine i{flex:1;height:1px;background:linear-gradient(to right,var(--accent),rgba(98,197,255,.15))}
+    .leaflet-container{font-family:inherit;background:#0b111a}
+    .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#07111f;color:#fff}
+    .leaflet-popup-content{margin:14px 16px}
+    .leaflet-control-zoom a{background:#07111f!important;color:#fff!important;border-color:rgba(255,255,255,.15)!important}
+    .custom-marker{width:18px;height:18px;border-radius:50%;background:#62c5ff;border:3px solid #fff;box-shadow:0 0 0 6px rgba(98,197,255,.2)}
+
+    @media(max-width:980px){
+      .navlinks a:not(.cta){display:none}.sectionHead,.aboutGrid,.priceGrid,.contact,.mapLayout{grid-template-columns:1fr}.offers{grid-template-columns:1fr 1fr}.portrait img{min-height:520px}.contact{padding:36px}
+    }
+    @media(max-width:620px){
+      .wrap{width:min(var(--max),calc(100% - 24px))}
+      nav{background:rgba(5,7,11,.78)}.navin{height:68px}.navlinks{gap:8px}.cta{padding:10px 13px;font-size:13px}
+      h1{font-size:58px}.heroContent{padding-bottom:34px}.heroMeta{grid-template-columns:1fr}.heroMeta div{padding:13px 16px}
+      section{padding:78px 0}.sectionHead{display:block}.sectionHead p{margin-top:18px}.offers{grid-template-columns:1fr}
+      .aboutText{padding:26px}.facts{grid-template-columns:1fr}.portrait img{min-height:430px}
+      .feature{min-height:72svh}.price{font-size:49px}.contact{border-radius:0;margin-inline:-12px;padding:30px 18px}.contactBtns{grid-template-columns:1fr}.foot{display:block}.slides{aspect-ratio:4/5;min-height:470px}.slideNav{inset:50% 10px auto}.slideNav button{width:42px;height:42px}.thumbs button{flex-basis:76px;height:52px}#europeMap{height:460px}.mapPanel{padding:24px}
+    }
+  </style>
+</head>
+<body>
+<nav>
+  <div class="wrap navin">
+    <a class="brand" href="#">RUNDFLUG<span>_CH</span></a>
+    <div class="navlinks">
+      <a href="#erlebnisse"><span data-de>Erlebnisse</span><span data-en>Experiences</span></a>
+      <a href="#galerie"><span data-de>Galerie</span><span data-en>Gallery</span></a>
+      <a href="#preise"><span data-de>Preise</span><span data-en>Pricing</span></a>
+      <button class="lang" id="langBtn" aria-label="Sprache wechseln">EN</button>
+      <a class="cta" href="#kontakt"><span data-de>Flug anfragen</span><span data-en>Request a flight</span></a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <img src="assets/images/hero.webp" alt="Sonnenaufgang über den Schweizer Alpen aus einer Cessna">
+  <div class="wrap heroContent">
+    <div class="eyebrow"><span data-de>Private Flugerlebnisse ab Triengen</span><span data-en>Private flight experiences from Triengen</span></div>
+    <h1><span data-de>Dein Ziel. Direkt angeflogen.</span><span data-en>Your destination. Flown direct.</span></h1>
+    <p class="heroLead"><span data-de>Individuelle Streckenflüge, Tagesreisen und One-Way-Flüge mit einer Cessna 172RG. Rundflüge sind ebenfalls möglich – persönlich geplant und abhängig von Wetter, Zuladung und Verfügbarkeit.</span><span data-en>Individual route flights, day trips and one-way flights in a Cessna 172RG. Scenic flights are also available – personally planned and subject to weather, payload and availability.</span></p>
+    <div class="heroActions">
+      <a class="btn primary" href="#kontakt"><span data-de>Streckenflug anfragen</span><span data-en>Request a route flight</span></a>
+      <a class="btn ghost" href="#galerie"><span data-de>Bilder ansehen</span><span data-en>View gallery</span></a>
+    </div>
+    <div class="heroMeta">
+      <div><strong>C172RG</strong><span data-de>Einziehfahrwerk</span><span data-en>Retractable gear</span></div>
+      <div><strong>LSPN</strong><span data-de>Start in Triengen</span><span data-en>Departure Triengen</span></div>
+      <div><strong>3 Pax</strong><span data-de>je nach Gewicht</span><span data-en>depending on payload</span></div>
+    </div>
+  </div>
+</header>
+
+<main>
+<section>
+  <div class="wrap">
+    <div class="sectionHead">
+      <div><div class="eyebrow"><span data-de>Dein Pilot</span><span data-en>Your pilot</span></div><h2><span data-de>Persönlich statt anonym.</span><span data-en>Personal, not anonymous.</span></h2></div>
+      <p><span data-de>Jeder Flug wird direkt mit dir besprochen. Route, Wetter, Zuladung und Flugplatzbetrieb werden realistisch beurteilt – ohne falsche Versprechen.</span><span data-en>Every flight is discussed directly with you. Route, weather, payload and airport operations are assessed realistically – without false promises.</span></p>
+    </div>
+    <div class="aboutGrid">
+      <div class="portrait"><img src="assets/images/pilot.webp" alt="Pilot im Cockpit einer Cessna"></div>
+      <div class="aboutText">
+        <div>
+          <h3><span data-de>Fliegen beginnt mit Vertrauen.</span><span data-en>Flying starts with trust.</span></h3>
+          <p><span data-de>Du sitzt nicht bei irgendeinem Anbieter im Flugzeug. Du planst deinen Flug direkt mit dem Piloten. So weisst du von Anfang an, was möglich ist, was es kostet und welche Bedingungen erfüllt sein müssen.</span><span data-en>You are not booking through an anonymous platform. You plan your flight directly with the pilot, so you know from the start what is possible, what it costs and which conditions must be met.</span></p>
+        </div>
+        <div class="facts">
+          <div class="fact"><b>PPL(A)</b><span data-de>Privatpilotenlizenz</span><span data-en>Private pilot licence</span></div>
+          <div class="fact"><b>Class 1</b><span data-de>Medical</span><span data-en>Medical</span></div>
+          <div class="fact"><b>Europe</b><span data-de>Ziele nach Prüfung</span><span data-en>Destinations on request</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="erlebnisse">
+  <div class="wrap">
+    <div class="sectionHead">
+      <div><div class="eyebrow"><span data-de>Flugmöglichkeiten</span><span data-en>Flight options</span></div><h2><span data-de>Dein Flug. Dein Ziel.</span><span data-en>Your flight. Your destination.</span></h2></div>
+      <p><span data-de>Du nennst Start, Ziel und Wunschdatum. Danach werden Route, Reichweite, Wetter, Flugplätze, Zoll und Kosten geprüft. Ein Rundflug ist ebenfalls möglich.</span><span data-en>You provide departure point, destination and preferred date. Route, range, weather, airports, customs and costs are then checked. Scenic flights are also possible.</span></p>
+    </div>
+    <div class="offers">
+      <article class="offer"><span class="n">01</span><h3><span data-de>Streckenflüge</span><span data-en>Route flights</span></h3><p><span data-de>Individuell geplante Flüge von Triengen zu einem vereinbarten Ziel.</span><span data-en>Individually planned flights from Triengen to an agreed destination.</span></p><strong><span data-de>Start und Ziel nach Prüfung</span><span data-en>Route subject to review</span></strong></article>
+      <article class="offer"><span class="n">02</span><h3><span data-de>Tagesreisen</span><span data-en>Day trips</span></h3><p><span data-de>Am Morgen losfliegen, vor Ort Zeit verbringen und am selben Tag zurückkehren.</span><span data-en>Depart in the morning, spend time at your destination and return the same day.</span></p><strong><span data-de>Individuell geplant</span><span data-en>Individually planned</span></strong></article>
+      <article class="offer"><span class="n">03</span><h3><span data-de>One-Way & Europa</span><span data-en>One-way & Europe</span></h3><p><span data-de>Gemeinsame Reiseflüge in die Schweiz und ins europäische Ausland – abhängig von Machbarkeit und Vorschriften.</span><span data-en>Shared travel flights within Switzerland and across Europe – subject to feasibility and regulations.</span></p><strong><span data-de>Auf Anfrage</span><span data-en>On request</span></strong></article>
+      <article class="offer"><span class="n">04</span><h3><span data-de>Rundflüge</span><span data-en>Scenic flights</span></h3><p><span data-de>Alpen, Seen, Städte oder deine Heimatregion aus der Luft erleben.</span><span data-en>Experience the Alps, lakes, cities or your home region from the air.</span></p><strong><span data-de>Optional ab Triengen</span><span data-en>Optional from Triengen</span></strong></article>
+    </div>
+  </div>
+</section>
+
+<section class="feature">
+  <img src="assets/images/matterhorn.webp" alt="Matterhorn aus der Luft">
+  <div class="wrap featureContent">
+    <div class="eyebrow"><span data-de>Alpenflug</span><span data-en>Alpine flight</span></div>
+    <h2><span data-de>Das Matterhorn auf Augenhöhe.</span><span data-en>The Matterhorn at eye level.</span></h2>
+    <p><span data-de>Ein Flug durch die Schweizer Alpen gehört zu den eindrücklichsten Erlebnissen, die man aus einem Kleinflugzeug erleben kann.</span><span data-en>A flight through the Swiss Alps is one of the most impressive experiences possible in a light aircraft.</span></p>
+  </div>
+</section>
+
+<section id="galerie">
+  <div class="wrap">
+    <div class="sectionHead">
+      <div><div class="eyebrow"><span data-de>Echte Eindrücke</span><span data-en>Real impressions</span></div><h2><span data-de>Jeder Flug schreibt seine eigene Geschichte.</span><span data-en>Every flight tells its own story.</span></h2></div>
+      <p><span data-de>Alle Bilder stammen aus echten Flügen. Die Slideshow wechselt automatisch; mit Pfeilen und Vorschaubildern kannst du selbst navigieren.</span><span data-en>All images are from real flights. The slideshow advances automatically, or you can navigate with arrows and thumbnails.</span></p>
+    </div>
+    <div class="slideshow" id="slideshow">
+      <div class="slides">
+        <figure class="slide active"><img src="assets/images/hero.webp" alt="Sonnenaufgang über den Alpen"><figcaption class="slideShade"><strong>Sonnenaufgang über den Alpen</strong><span class="slideCount">01 / 16</span></figcaption></figure>
+        <figure class="slide"><img src="assets/images/lake.webp" alt="Schweizer See aus der Luft"><figcaption class="slideShade"><strong>Seenlandschaft Schweiz</strong><span class="slideCount">02 / 16</span></figcaption></figure>
+        <figure class="slide"><img src="assets/images/matterhorn.webp" alt="Matterhorn aus der Luft"><figcaption class="slideShade"><strong>Matterhorn</strong><span class="slideCount">03 / 16</span></figcaption></figure>
+        <figure class="slide"><img src="assets/images/alps.webp" alt="Schweizer Alpen aus der Luft"><figcaption class="slideShade"><strong>Schweizer Alpen</strong><span class="slideCount">04 / 16</span></figcaption></figure>
+        <figure class="slide"><img src="assets/images/night.webp" alt="Nachtanflug"><figcaption class="slideShade"><strong>Nachtanflug</strong><span class="slideCount">05 / 16</span></figcaption></figure>
+        <figure class="slide"><img src="assets/images/arena.webp" alt="Allianz Arena aus der Luft"><figcaption class="slideShade"><strong>München</strong><span class="slideCount">06 / 16</span></figcaption></figure>
+        <figure class="slide"><img src="assets/images/island.webp" alt="Insel im See"><figcaption class="slideShade"><strong>Insel im See</strong><span class="slideCount">07 / 16</span></figcaption></figure>
+        <figure class="slide"><img src="assets/images/valley.webp" alt="Alpental"><figcaption class="slideShade"><strong>Alpental</strong><span class="slideCount">08 / 16</span></figcaption></figure>
+        <figure class="slide"><img src="assets/images/cloudsea.webp" alt="Berg über dem Nebelmeer"><figcaption class="slideShade"><strong>Über dem Nebelmeer</strong><span class="slideCount">09 / 16</span></figcaption></figure>
+        <figure class="slide"><img src="assets/images/lakes.webp" alt="Seen und Berge"><figcaption class="slideShade"><strong>Seen und Berge</strong><span class="slideCount">10 / 16</span></figcaption></figure>
+        <figure class="slide"><img src="assets/images/samedan.webp" alt="Samedan im Winter"><figcaption class="slideShade"><strong>Samedan</strong><span class="slideCount">11 / 16</span></figcaption></figure>
+        <figure class="slide"><img src="assets/images/river.webp" alt="Flusslandschaft"><figcaption class="slideShade"><strong>Flusslandschaft</strong><span class="slideCount">12 / 16</span></figcaption></figure>
+        <figure class="slide"><img src="assets/images/locarno.webp" alt="Anflug Locarno"><figcaption class="slideShade"><strong>Locarno</strong><span class="slideCount">13 / 16</span></figcaption></figure>
+        <figure class="slide"><img src="assets/images/bergamo.webp" alt="Anflug Bergamo"><figcaption class="slideShade"><strong>Bergamo</strong><span class="slideCount">14 / 16</span></figcaption></figure>
+        <figure class="slide"><img src="assets/images/cessna.webp" alt="Cessna 172RG"><figcaption class="slideShade"><strong>Cessna 172RG</strong><span class="slideCount">15 / 16</span></figcaption></figure>
+        <figure class="slide"><img src="assets/images/tail.webp" alt="Cessna auf der Centerline"><figcaption class="slideShade"><strong>Bereit zum Abflug</strong><span class="slideCount">16 / 16</span></figcaption></figure>
+      </div>
+      <div class="slideNav"><button type="button" id="prevSlide" aria-label="Vorheriges Bild">‹</button><button type="button" id="nextSlide" aria-label="Nächstes Bild">›</button></div>
+      <div class="slideDots" id="slideDots"></div>
+      <div class="thumbs" id="slideThumbs"></div>
+    </div>
+  </div>
+</section>
+
+<section id="karte">
+  <div class="wrap">
+    <div class="sectionHead">
+      <div><div class="eyebrow"><span data-de>Mögliche Ziele</span><span data-en>Possible destinations</span></div><h2><span data-de>Europa liegt näher, als du denkst.</span><span data-en>Europe is closer than you think.</span></h2></div>
+      <p><span data-de>Wähle auf der Karte ein Beispielziel. Jede Strecke wird individuell auf Wetter, Reichweite, Flugplatzbetrieb und rechtliche Machbarkeit geprüft.</span><span data-en>Select an example destination on the map. Every route is checked for weather, range, airport operations and legal feasibility.</span></p>
+    </div>
+    <div class="mapLayout">
+      <div id="europeMap" aria-label="Interaktive Europakarte mit möglichen Flugzielen"></div>
+      <aside class="mapPanel">
+        <div>
+          <div class="eyebrow"><span data-de>Ausgewählte Strecke</span><span data-en>Selected route</span></div>
+          <h3 id="mapTitle">Triengen → Locarno</h3>
+          <p id="mapText">Ein möglicher Tagesausflug ins Tessin. Die tatsächliche Route und Flugdauer werden vor dem Flug geplant.</p>
+          <div class="mapDetails">
+            <strong id="mapCountry">Schweiz</strong>
+            <span id="mapCode">LSZL · Beispielziel</span>
+            <div class="routeLine"><b>LSPN</b><i></i><b id="mapDestCode">LSZL</b></div>
+          </div>
+        </div>
+        <a class="btn primary" id="mapRequest" href="mailto:diego_beerle@bluewin.ch?subject=Anfrage%20Streckenflug%20nach%20Locarno">Diese Strecke anfragen</a>
+      </aside>
+    </div>
+  </div>
+</section>
+<section id="preise">
+  <div class="wrap">
+    <div class="sectionHead">
+      <div><div class="eyebrow"><span data-de>Kosten</span><span data-en>Pricing</span></div><h2><span data-de>Transparent gerechnet.</span><span data-en>Transparent calculation.</span></h2></div>
+      <p><span data-de>Der Rechner liefert eine grobe Orientierung. Die definitive Kalkulation erfolgt erst nach genauer Prüfung der Route.</span><span data-en>The calculator provides a rough estimate. Final pricing is only possible after checking the exact route.</span></p>
+    </div>
+    <div class="priceGrid">
+      <div class="priceCard">
+        <div class="price">CHF 6.35 <small><span data-de>/ Flugminute exkl. MWST</span><span data-en>/ flight minute excl. VAT</span></small></div>
+        <div class="rows">
+          <div class="row"><span>MWST / VAT</span><strong>8.1%</strong></div>
+          
+          
+        </div>
+        <p class="small"><span data-de>Flugdauer, Rollen, Wind, Luftraumfreigaben und Umwege können die effektiven Kosten verändern. Die Berechnung ist unverbindlich.</span><span data-en>Flight duration, taxi time, wind, airspace clearances and detours can change the effective costs. This estimate is non-binding.</span></p>
+      </div>
+      <div class="calc">
+        <h3 style="font-size:30px;margin-top:0"><span data-de>Kosten grob berechnen</span><span data-en>Estimate costs</span></h3>
+        <label for="minutes"><span data-de>Geschätzte Flugzeit in Minuten</span><span data-en>Estimated flight time in minutes</span></label>
+        <input id="minutes" type="number" min="1" value="60">
+        
+        <div class="result"><span><span data-de>Geschätzte Gesamtkosten</span><span data-en>Estimated total</span></span><strong id="total">CHF 441.90</strong><small><span data-de>inkl. 8.1% MWST auf Flugkosten</span><span data-en>incl. 8.1% VAT on flight costs</span></small></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="kontakt">
+  <div class="wrap contact">
+    <div>
+      <div class="eyebrow"><span data-de>Bereit?</span><span data-en>Ready?</span></div>
+      <h2><span data-de>Welche Strecke möchtest du fliegen?</span><span data-en>Which route would you like to fly?</span></h2>
+      <p style="color:#d4e1ee"><span data-de>Sende gewünschten Start- und Zielflugplatz, Datum, Anzahl Personen und ungefähres Gewicht. Für einen Rundflug kannst du stattdessen deine gewünschte Region angeben.</span><span data-en>Send your preferred departure and destination airports, date, number of passengers and approximate weight. For a scenic flight, simply name your preferred region.</span></p>
+    </div>
+    <div class="contactBox">
+      <h3 style="font-size:28px;margin:0 0 8px"><span data-de>Kontaktweg wählen</span><span data-en>Choose contact method</span></h3>
+      <p style="color:#68758a"><span data-de>Beide Wege führen direkt zu deiner unverbindlichen Anfrage.</span><span data-en>Both options lead directly to your non-binding request.</span></p>
+      <div class="contactBtns">
+        <a class="mail" href="mailto:diego_beerle@bluewin.ch?subject=Anfrage%20Streckenflug&body=Hallo%20Diego%0A%0AArt%20des%20Fluges%3A%20Streckenflug%20%2F%20Tagesreise%20%2F%20One-Way%20%2F%20Rundflug%0AStartflugplatz%3A%20%0AZielflugplatz%20oder%20Region%3A%20%0AWunschdatum%3A%20%0AAnzahl%20Personen%3A%20%0AUngefähres%20Gewicht%3A%20%0ANachricht%3A%20">✉️ <span data-de>E-Mail</span><span data-en>Email</span></a>
+        <a class="insta" href="https://www.instagram.com/rundflug_ch/" target="_blank" rel="noopener noreferrer">📷 Instagram</a>
+      </div>
+      <p class="small" style="margin-top:18px">diego_beerle@bluewin.ch · @rundflug_ch</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div><strong>RUNDFLUG_CH</strong><br><span data-de>Private Flugerlebnisse ab Triengen.</span><span data-en>Private flight experiences from Triengen.</span></div>
+    <div><span data-de>Alle Flüge vorbehaltlich Wetter, Verfügbarkeit, Zuladung und rechtlicher Zulässigkeit. Keine Linien- oder Beförderungsgarantie.</span><span data-en>All flights are subject to weather, availability, payload and legal feasibility. No scheduled transport guarantee.</span></div>
+  </div>
+</footer>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Bildansicht">
+  <button class="close" id="closeLightbox" aria-label="Schliessen">×</button>
+  <img id="lightboxImg" alt="">
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+  const body=document.body, langBtn=document.getElementById('langBtn');
+  langBtn.addEventListener('click',()=>{body.classList.toggle('en');langBtn.textContent=body.classList.contains('en')?'DE':'EN';document.documentElement.lang=body.classList.contains('en')?'en':'de-CH'});
+
+  const mins=document.getElementById('minutes'),total=document.getElementById('total');
+  function calc(){const sum=(Number(mins.value)||0)*6.35*1.081;total.textContent='CHF '+sum.toLocaleString('de-CH',{minimumFractionDigits:2,maximumFractionDigits:2})}
+  mins.addEventListener('input',calc);calc();
+
+  const box=document.getElementById('lightbox'),boxImg=document.getElementById('lightboxImg');
+  function openBox(img){boxImg.src=img.src;boxImg.alt=img.alt;box.classList.add('open');body.classList.add('lock')}
+  function closeBox(){box.classList.remove('open');body.classList.remove('lock')}
+  document.getElementById('closeLightbox').addEventListener('click',closeBox);
+  box.addEventListener('click',e=>{if(e.target===box)closeBox()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeBox()});
+
+  const slides=[...document.querySelectorAll('.slide')],dots=document.getElementById('slideDots'),thumbs=document.getElementById('slideThumbs');
+  let currentSlide=0,slideTimer;
+  slides.forEach((slide,index)=>{
+    const dot=document.createElement('button');dot.type='button';dot.setAttribute('aria-label','Bild '+(index+1));dot.addEventListener('click',()=>showSlide(index,true));dots.appendChild(dot);
+    const thumb=document.createElement('button');thumb.type='button';thumb.innerHTML='<img src="'+slide.querySelector('img').src+'" alt="">';thumb.addEventListener('click',()=>showSlide(index,true));thumbs.appendChild(thumb);
+    slide.querySelector('img').addEventListener('click',e=>openBox(e.currentTarget));
+  });
+  const dotButtons=[...dots.children],thumbButtons=[...thumbs.children];
+  function showSlide(index,restart=false){
+    currentSlide=(index+slides.length)%slides.length;
+    slides.forEach((s,i)=>s.classList.toggle('active',i===currentSlide));
+    dotButtons.forEach((d,i)=>d.classList.toggle('active',i===currentSlide));
+    thumbButtons.forEach((t,i)=>t.classList.toggle('active',i===currentSlide));
+    thumbButtons[currentSlide].scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+    if(restart)startTimer();
+  }
+  function startTimer(){clearInterval(slideTimer);slideTimer=setInterval(()=>showSlide(currentSlide+1),5500)}
+  document.getElementById('prevSlide').addEventListener('click',()=>showSlide(currentSlide-1,true));
+  document.getElementById('nextSlide').addEventListener('click',()=>showSlide(currentSlide+1,true));
+  document.getElementById('slideshow').addEventListener('mouseenter',()=>clearInterval(slideTimer));
+  document.getElementById('slideshow').addEventListener('mouseleave',startTimer);
+  showSlide(0);startTimer();
+
+  const destinations=[
+    {name:'Locarno',country:'Schweiz',code:'LSZL',lat:46.1608,lng:8.8786,text:'Ein möglicher Tagesausflug ins Tessin. Die tatsächliche Route und Flugdauer werden vor dem Flug geplant.'},
+    {name:'Samedan',country:'Schweiz',code:'LSZS',lat:46.5341,lng:9.8841,text:'Ein eindrückliches Alpenziel im Engadin. Flüge sind stark wetter- und leistungsabhängig.'},
+    {name:'Lyon',country:'Frankreich',code:'LFLY',lat:45.7272,lng:4.9443,text:'Ein attraktives Ziel für einen Tagesausflug nach Frankreich.'},
+    {name:'Friedrichshafen',country:'Deutschland',code:'EDNY',lat:47.6713,lng:9.5115,text:'Kurze Strecke über den Bodensee mit vielen Möglichkeiten für einen Tagestrip.'},
+    {name:'München',country:'Deutschland',code:'EDMO',lat:48.0814,lng:11.2831,text:'Beispielziel im Raum München. Der passende Flugplatz wird nach Reiseplanung gewählt.'},
+    {name:'Salzburg',country:'Österreich',code:'LOWS',lat:47.7933,lng:13.0043,text:'Streckenflug über die Alpen nach Salzburg – abhängig von Wetter und Flugplatzbedingungen.'},
+    {name:'Innsbruck',country:'Österreich',code:'LOWI',lat:47.2602,lng:11.3440,text:'Ein anspruchsvolles Alpenziel, das nur bei passenden Bedingungen angeflogen wird.'},
+    {name:'Bergamo',country:'Italien',code:'LIME',lat:45.6739,lng:9.7042,text:'Eine mögliche Verbindung in die Lombardei für Tagesreisen oder individuelle Streckenflüge.'},
+    {name:'Venedig',country:'Italien',code:'LIPV',lat:45.4283,lng:12.3881,text:'Ein besonderes Ziel für einen Tagestrip nach Norditalien.'},
+    {name:'Pula',country:'Kroatien',code:'LDPL',lat:44.8935,lng:13.9222,text:'Eine längere Reisestrecke an die kroatische Küste – nur nach detaillierter Planung.'}
+  ];
+
+  if(window.L){
+    const map=L.map('europeMap',{scrollWheelZoom:false}).setView([47,9.5],5);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; OpenStreetMap'}).addTo(map);
+    const triengen=[47.2267,8.0781];
+    const homeIcon=L.divIcon({className:'',html:'<div class="custom-marker" style="background:#ffd98a"></div>',iconSize:[18,18],iconAnchor:[9,9]});
+    const destIcon=L.divIcon({className:'',html:'<div class="custom-marker"></div>',iconSize:[18,18],iconAnchor:[9,9]});
+    L.marker(triengen,{icon:homeIcon}).addTo(map).bindPopup('<strong>Triengen · LSPN</strong><br>Ausgangspunkt');
+    let route;
+    function selectDestination(d){
+      document.getElementById('mapTitle').textContent='Triengen → '+d.name;
+      document.getElementById('mapText').textContent=d.text;
+      document.getElementById('mapCountry').textContent=d.country;
+      document.getElementById('mapCode').textContent=d.code+' · Beispielziel';
+      document.getElementById('mapDestCode').textContent=d.code;
+      document.getElementById('mapRequest').href='mailto:diego_beerle@bluewin.ch?subject='+encodeURIComponent('Anfrage Streckenflug nach '+d.name);
+      if(route)map.removeLayer(route);
+      route=L.polyline([triengen,[d.lat,d.lng]],{color:'#62c5ff',weight:3,dashArray:'8 8'}).addTo(map);
+      map.fitBounds(route.getBounds().pad(.35),{maxZoom:7});
+    }
+    destinations.forEach(d=>{
+      const marker=L.marker([d.lat,d.lng],{icon:destIcon}).addTo(map);
+      marker.bindPopup('<strong>'+d.name+'</strong><br>'+d.country+' · '+d.code);
+      marker.on('click',()=>selectDestination(d));
+    });
+    selectDestination(destinations[0]);
+  } else {
+    document.getElementById('europeMap').innerHTML='<div style="padding:30px;color:#aab6c7">Die interaktive Karte benötigt eine Internetverbindung.</div>';
+  }
+</script>
+</body>
+</html>
